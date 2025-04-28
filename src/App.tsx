@@ -5,7 +5,6 @@ import {
   Search, 
   MessageSquare, 
   // Calendar, 
-  // CreditCard, 
   Settings, 
   Menu, 
   X, 
@@ -17,6 +16,21 @@ import {
   ThumbsDown,
   Info
 } from 'lucide-react';
+
+// Define types for our application
+interface Citation {
+  documentId: number;
+  title: string;
+  page: number;
+  text: string;
+}
+
+interface Message {
+  id: number;
+  role: string;
+  content: string;
+  citations?: Citation[];
+}
 
 // Sample covenant documents
 const covenantDocuments = [
@@ -49,13 +63,13 @@ const commonQuestions = [
 
 const ResidentPortal = () => {
   // State for chat interface
-  const [messages, setMessages] = useState(sampleMessages);
+  const [messages, setMessages] = useState<Message[]>(sampleMessages);
   const [inputValue, setInputValue] = useState('');
   const [chatOpen, setChatOpen] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
-  const [activeCitation, setActiveCitation] = useState(null);
-  const [documentView, setDocumentView] = useState(null);
-  const messagesEndRef = useRef(null);
+  const [activeCitation, setActiveCitation] = useState<number | null>(null);
+  const [documentView, setDocumentView] = useState<number | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   
   // State for main interface
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,14 +84,14 @@ const ResidentPortal = () => {
   }, [messages]);
 
   // Handle sending a new message
-  const handleSendMessage = (e) => {
+  const handleSendMessage = (e: React.FormEvent<HTMLFormElement> | { preventDefault: () => void; currentTarget: { dataset: { question?: string } } }) => {
     e.preventDefault();
     
     // If no input and not a suggested question, return
-    if (!inputValue.trim() && !e.currentTarget.dataset.question) return;
+    if (!inputValue.trim() && !('dataset' in e.currentTarget && e.currentTarget.dataset.question)) return;
     
     // Use suggested question or input value
-    const messageText = e.currentTarget.dataset.question || inputValue;
+    const messageText = ('dataset' in e.currentTarget && e.currentTarget.dataset.question) || inputValue;
     
     // Add user message
     const newUserMessage = {
@@ -143,7 +157,7 @@ const ResidentPortal = () => {
   };
 
   // Handle suggested question click
-  const handleSuggestedQuestion = (question) => {
+  const handleSuggestedQuestion = (question: string) => {
     handleSendMessage({
       preventDefault: () => {},
       currentTarget: {
@@ -155,7 +169,7 @@ const ResidentPortal = () => {
   };
 
   // Render citations with source references
-  const renderCitations = (citations) => {
+  const renderCitations = (citations: Citation[]) => {
     if (!citations || citations.length === 0) return null;
     
     return (
